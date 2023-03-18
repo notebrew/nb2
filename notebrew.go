@@ -2,6 +2,7 @@ package nb2
 
 import (
 	"io/fs"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -34,14 +35,14 @@ func (dir dirFS) RemoveAll(name string) error {
 
 func (dir dirFS) List(name string) ([]string, error) {
 	var names []string
-	root := filepath.FromSlash(filepath.Join(string(dir), name)) + string(os.PathSeparator)
-	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
+	err := filepath.WalkDir(filepath.Join(string(dir), name), func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
-		if !d.IsDir() {
-			names = append(names, strings.TrimPrefix(path, root))
+		if d.IsDir() {
+			return nil
 		}
+		names = append(names, strings.TrimPrefix(strings.TrimPrefix(path, string(dir)), string(os.PathSeparator)))
 		return nil
 	})
 	if err != nil {
@@ -50,6 +51,16 @@ func (dir dirFS) List(name string) ([]string, error) {
 	return names, nil
 }
 
+const (
+	PrefixFile  = "/file/"
+	PrefixNote  = "/note/"
+	PrefixPost  = "/post/"
+	PrefixImage = "/image/"
+)
+
 type Notebrew struct {
 	Dir FS
+}
+
+func (nb *Notebrew) File(w http.ResponseWriter, r *http.Request) {
 }
