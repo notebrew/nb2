@@ -62,35 +62,265 @@ type Notebrew struct {
 	Dir FS
 }
 
-func (nb *Notebrew) Handler() http.Handler {
+func (nb *Notebrew) Router() http.Handler {
 	mux := http.NewServeMux()
 	// static
-	mux.HandleFunc("/static/", nil)           // GET
-	mux.HandleFunc("/admin/static/", nil)     // GET
-	mux.HandleFunc("/api/static/create", nil) // POST
-	mux.HandleFunc("/api/static/delete", nil) // POST
-	mux.HandleFunc("/api/static/update", nil) // POST
+	mux.HandleFunc("/static/", nb.Static)
+	mux.HandleFunc("/admin/static/", nb.StaticAdmin)
+	mux.HandleFunc("/api/static/create", nb.StaticCreate)
+	mux.HandleFunc("/api/static/delete", nb.StaticDelete)
+	mux.HandleFunc("/api/static/update", nb.StaticUpdate)
+	mux.HandleFunc("/api/static/rename", nb.StaticRename)
 	// image
-	mux.HandleFunc("/image/", nil)           // GET
-	mux.HandleFunc("/admin/image/", nil)     // GET
-	mux.HandleFunc("/api/image/create", nil) // POST
-	mux.HandleFunc("/api/image/delete", nil) // POST
+	mux.HandleFunc("/image/", nb.Image)
+	mux.HandleFunc("/admin/image/", nb.ImageAdmin)
+	mux.HandleFunc("/api/image/create", nb.ImageCreate)
+	mux.HandleFunc("/api/image/delete", nb.ImageDelete)
 	// template
-	mux.HandleFunc("/admin/template/", nil)     // GET
-	mux.HandleFunc("/api/template/create", nil) // POST
-	mux.HandleFunc("/api/template/delete", nil) // POST
-	mux.HandleFunc("/api/template/update", nil) // POST
-	mux.HandleFunc("/api/template/rename", nil) // POST
+	mux.HandleFunc("/admin/template/", nb.TemplateAdmin)
+	mux.HandleFunc("/api/template/create", nb.TemplateCreate)
+	mux.HandleFunc("/api/template/delete", nb.TemplateDelete)
+	mux.HandleFunc("/api/template/update", nb.TemplateUpdate)
+	mux.HandleFunc("/api/template/rename", nb.TemplateRename)
 	// post
-	mux.HandleFunc("/post/", nil)           // GET
-	mux.HandleFunc("/admin/post/", nil)     // GET
-	mux.HandleFunc("/api/post/create", nil) // POST
-	mux.HandleFunc("/api/post/delete", nil) // POST
-	mux.HandleFunc("/api/post/update", nil) // POST
+	mux.HandleFunc("/post/", nb.Post)
+	mux.HandleFunc("/admin/post/", nb.PostAdmin)
+	mux.HandleFunc("/api/post/create", nb.PostCreate)
+	mux.HandleFunc("/api/post/delete", nb.PostDelete)
+	mux.HandleFunc("/api/post/update", nb.PostUpdate)
+	// page
+	mux.HandleFunc("/", nb.Page)
+	mux.HandleFunc("/admin/page/", nb.PageAdmin)
+	mux.HandleFunc("/api/page/create", nb.PageCreate)
+	mux.HandleFunc("/api/page/delete", nb.PageDelete)
+	mux.HandleFunc("/api/page/update", nb.PageUpdate)
+	mux.HandleFunc("/api/page/rename", nb.PageRename)
 	// note
-	mux.HandleFunc("/note/", nil)           // GET
-	mux.HandleFunc("/api/note/create", nil) // POST
-	mux.HandleFunc("/api/note/delete", nil) // POST
-	mux.HandleFunc("/api/note/update", nil) // POST
+	mux.HandleFunc("/note/", nb.Note)
+	mux.HandleFunc("/api/note/create", nb.NoteCreate)
+	mux.HandleFunc("/api/note/delete", nb.NoteDelete)
+	mux.HandleFunc("/api/note/update", nb.NoteUpdate)
 	return mux
+}
+
+// static //
+
+func (nb *Notebrew) Static(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		return
+	}
+}
+
+func (nb *Notebrew) StaticAdmin(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		return
+	}
+}
+
+func (nb *Notebrew) StaticCreate(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		return
+	}
+}
+
+func (nb *Notebrew) StaticDelete(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		return
+	}
+}
+
+func (nb *Notebrew) StaticUpdate(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		return
+	}
+}
+
+func (nb *Notebrew) StaticRename(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		return
+	}
+}
+
+// image //
+
+func (nb *Notebrew) Image(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		return
+	}
+}
+
+func (nb *Notebrew) ImageAdmin(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		return
+	}
+}
+
+func (nb *Notebrew) ImageCreate(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		return
+	}
+}
+
+func (nb *Notebrew) ImageDelete(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		return
+	}
+}
+
+// template //
+
+func (nb *Notebrew) TemplateAdmin(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		return
+	}
+}
+
+func (nb *Notebrew) TemplateCreate(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		return
+	}
+}
+
+func (nb *Notebrew) TemplateDelete(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		return
+	}
+}
+
+func (nb *Notebrew) TemplateUpdate(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		return
+	}
+}
+
+func (nb *Notebrew) TemplateRename(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		return
+	}
+}
+
+// post //
+
+func (nb *Notebrew) Post(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		return
+	}
+}
+
+func (nb *Notebrew) PostAdmin(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		return
+	}
+}
+
+func (nb *Notebrew) PostCreate(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		return
+	}
+}
+
+func (nb *Notebrew) PostDelete(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		return
+	}
+}
+
+func (nb *Notebrew) PostUpdate(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		return
+	}
+}
+
+// page //
+
+func (nb *Notebrew) Page(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		return
+	}
+}
+
+func (nb *Notebrew) PageAdmin(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		return
+	}
+}
+
+func (nb *Notebrew) PageCreate(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		return
+	}
+}
+
+func (nb *Notebrew) PageDelete(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		return
+	}
+}
+
+func (nb *Notebrew) PageUpdate(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		return
+	}
+}
+
+func (nb *Notebrew) PageRename(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		return
+	}
+}
+
+// note //
+
+func (nb *Notebrew) Note(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		return
+	}
+}
+
+func (nb *Notebrew) NoteCreate(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		return
+	}
+}
+
+func (nb *Notebrew) NoteDelete(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		return
+	}
+}
+
+func (nb *Notebrew) NoteUpdate(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		return
+	}
 }
