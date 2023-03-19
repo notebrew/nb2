@@ -62,5 +62,35 @@ type Notebrew struct {
 	Dir FS
 }
 
-func (nb *Notebrew) File(w http.ResponseWriter, r *http.Request) {
+func (nb *Notebrew) Handler() http.Handler {
+	mux := http.NewServeMux()
+	// static
+	mux.HandleFunc("/static/", nil)           // GET
+	mux.HandleFunc("/admin/static/", nil)     // GET
+	mux.HandleFunc("/api/static/create", nil) // POST
+	mux.HandleFunc("/api/static/delete", nil) // POST
+	mux.HandleFunc("/api/static/update", nil) // POST
+	// image
+	mux.HandleFunc("/image/", nil)           // GET
+	mux.HandleFunc("/admin/image/", nil)     // GET
+	mux.HandleFunc("/api/image/create", nil) // POST
+	mux.HandleFunc("/api/image/delete", nil) // POST
+	// template
+	mux.HandleFunc("/admin/template/", nil)     // GET
+	mux.HandleFunc("/api/template/create", nil) // POST
+	mux.HandleFunc("/api/template/delete", nil) // POST
+	mux.HandleFunc("/api/template/update", nil) // POST
+	mux.HandleFunc("/api/template/rename", nil) // POST
+	// post
+	mux.HandleFunc("/post/", nil)           // GET
+	mux.HandleFunc("/admin/post/", nil)     // GET
+	mux.HandleFunc("/api/post/create", nil) // POST
+	mux.HandleFunc("/api/post/delete", nil) // POST
+	mux.HandleFunc("/api/post/update", nil) // POST
+	// note
+	mux.HandleFunc("/note/", nil)           // GET
+	mux.HandleFunc("/api/note/create", nil) // POST
+	mux.HandleFunc("/api/note/delete", nil) // POST
+	mux.HandleFunc("/api/note/update", nil) // POST
+	return mux
 }
