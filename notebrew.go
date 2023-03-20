@@ -314,6 +314,11 @@ func (nb *Notebrew) Post(w http.ResponseWriter, r *http.Request) {
 }
 
 func (nb *Notebrew) PostAdmin(w http.ResponseWriter, r *http.Request) {
+	// TODO: convert from local_url.txt to notebrew.url and follow the
+	// [InternetShortcut]]\nURL=... format. See if a notebrew.url file created
+	// programatically by notebrew is clickable in Windows. When parsing the
+	// URL from the file, find [InternetShortcut] within the file then start
+	// going line by line to pull out the URL value.
 	if r.Method != http.MethodGet {
 		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
 		return
