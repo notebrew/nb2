@@ -2,11 +2,14 @@ package nb2
 
 import (
 	"bytes"
+	"errors"
 	"io"
 	"io/fs"
+	"mime"
 	"net"
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 )
@@ -91,8 +94,17 @@ func (nb *Notebrew) Addr() (addr string, err error) {
 	return addr, ln.Close()
 }
 
+// admin
+// api
+// static
+// image
+// post
+// note
+
 func (nb *Notebrew) Router() http.Handler {
 	mux := http.NewServeMux()
+	mux.HandleFunc("/admin/lib/", nb.ServeFile)
+	mux.HandleFunc("/admin/script/", nb.ServeFile)
 	// static
 	mux.HandleFunc("/static/", nb.Static)
 	mux.HandleFunc("/admin/static/", nb.StaticAdmin)
@@ -130,6 +142,53 @@ func (nb *Notebrew) Router() http.Handler {
 	mux.HandleFunc("/api/note/delete", nb.NoteDelete)
 	mux.HandleFunc("/api/note/update", nb.NoteUpdate)
 	return mux
+}
+
+// assets //
+
+var rootFS = os.DirFS(".")
+
+func (nb *Notebrew) ServeFile(w http.ResponseWriter, r *http.Request) {
+	name := strings.TrimPrefix(r.URL.Path, "/admin/")
+	file, err := rootFS.Open(strings.TrimSuffix(name, "/"))
+	if err != nil {
+		if errors.Is(err, fs.ErrNotExist) {
+			http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+			return
+		}
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	fileinfo, err := file.Stat()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if fileinfo.IsDir() {
+		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+		return
+	}
+	if strings.HasSuffix(name, ".gz") {
+		ext := path.Ext(strings.TrimSuffix(name, ".gz"))
+		if ext != "" {
+			mimeType := mime.TypeByExtension(ext)
+			w.Header().Set("Content-Type", mimeType)
+			w.Header().Set("Content-Encoding", "gzip")
+		}
+	}
+	fileseeker, ok := file.(io.ReadSeeker)
+	if ok {
+		http.ServeContent(w, r, name, fileinfo.ModTime(), fileseeker)
+		return
+	}
+	var buf bytes.Buffer
+	buf.Grow(int(fileinfo.Size()))
+	_, err = buf.ReadFrom(file)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	http.ServeContent(w, r, name, fileinfo.ModTime(), bytes.NewReader(buf.Bytes()))
 }
 
 // static //
