@@ -15,7 +15,6 @@ import (
 )
 
 func main() {
-	exit("bruh")
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 	dataDir := os.Getenv("NOTEBREW_DATA")
 	if dataDir == "" {
