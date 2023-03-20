@@ -26,7 +26,11 @@ func (dir dirFS) Open(name string) (fs.File, error) {
 }
 
 func (dir dirFS) WriteFile(name string, data []byte, perm fs.FileMode) error {
-	return os.WriteFile(name, data, perm)
+	err := os.MkdirAll(filepath.Dir(name), 0755)
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(name, data, 0644)
 }
 
 func (dir dirFS) RemoveAll(name string) error {
@@ -59,7 +63,11 @@ const (
 )
 
 type Notebrew struct {
-	Dir FS
+	fsys FS
+}
+
+func New(fsys FS) *Notebrew {
+	return &Notebrew{fsys: fsys}
 }
 
 func (nb *Notebrew) Router() http.Handler {
