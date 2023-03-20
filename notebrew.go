@@ -2,6 +2,7 @@ package nb2
 
 import (
 	"io/fs"
+	"net"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -55,19 +56,20 @@ func (dir dirFS) List(name string) ([]string, error) {
 	return names, nil
 }
 
-const (
-	PrefixFile  = "/file/"
-	PrefixNote  = "/note/"
-	PrefixPost  = "/post/"
-	PrefixImage = "/image/"
-)
-
 type Notebrew struct {
 	fsys FS
 }
 
 func New(fsys FS) *Notebrew {
 	return &Notebrew{fsys: fsys}
+}
+
+func (nb *Notebrew) Init() error {
+	return nil
+}
+
+func (nb *Notebrew) Listener() (net.Listener, error) {
+	return nil, nil
 }
 
 func (nb *Notebrew) Router() http.Handler {
