@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -9,6 +10,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"syscall"
+	"time"
 	"unsafe"
 
 	"github.com/notebrew/nb2"
@@ -16,36 +18,36 @@ import (
 
 func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
-
-	if true {
-		exit("yooo")
-	}
-
 	dataDir := os.Getenv("NOTEBREW_DATA")
 	if dataDir == "" {
 		userHomeDir, err := os.UserHomeDir()
 		if err != nil {
-			log.Fatal(err)
+			exit(err)
 		}
 		dataDir = filepath.Join(userHomeDir, "notebrew_data")
 	}
 	err := os.MkdirAll(dataDir, 0755)
 	if err != nil {
-		log.Fatal(err)
+		exit(err)
 	}
 	nb := nb2.New(nb2.DirFS(dataDir))
-
-	// -mode local | singleblog | multiblog
+	addr, err := nb.Addr()
+	if err != nil {
+		exit(err)
+	}
 	waitForInterrupt := make(chan os.Signal, 1)
 	signal.Notify(waitForInterrupt, syscall.SIGINT, syscall.SIGTERM)
 	server := http.Server{
-		Addr:    os.Getenv("NOTEBREW_ADDR"),
+		Addr:    addr,
 		Handler: nb.Router(),
 	}
-	if server.Addr == "" {
-		server.Addr = "localhost:7070"
-	}
-	fmt.Println(http.ListenAndServe("localhost:80", nil))
+	fmt.Println("Listening on " + server.Addr)
+	go server.ListenAndServe()
+	<-waitForInterrupt
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	_ = server.Shutdown(ctx)
+	_ = nb.Cleanup()
 }
 
 func exit(v ...any) {

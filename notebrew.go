@@ -1,6 +1,8 @@
 package nb2
 
 import (
+	"bytes"
+	"io"
 	"io/fs"
 	"net"
 	"net/http"
@@ -13,7 +15,7 @@ type FS interface {
 	Open(name string) (fs.File, error)
 	WriteFile(name string, data []byte, perm fs.FileMode) error
 	RemoveAll(name string) error
-	List(name string) ([]string, error)
+	WalkDir(root string, fn fs.WalkDirFunc) error
 }
 
 type dirFS string
@@ -27,33 +29,23 @@ func (dir dirFS) Open(name string) (fs.File, error) {
 }
 
 func (dir dirFS) WriteFile(name string, data []byte, perm fs.FileMode) error {
-	err := os.MkdirAll(filepath.Dir(name), 0755)
+	path := filepath.Join(string(dir), name)
+	err := os.MkdirAll(filepath.Dir(path), 0755)
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(name, data, 0644)
+	return os.WriteFile(path, data, perm)
 }
 
 func (dir dirFS) RemoveAll(name string) error {
 	return os.RemoveAll(filepath.Join(string(dir), name))
 }
 
-func (dir dirFS) List(name string) ([]string, error) {
-	var names []string
-	err := filepath.WalkDir(filepath.Join(string(dir), name), func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-		if d.IsDir() {
-			return nil
-		}
-		names = append(names, strings.TrimPrefix(strings.TrimPrefix(path, string(dir)), string(os.PathSeparator)))
-		return nil
+func (dir dirFS) WalkDir(root string, fn fs.WalkDirFunc) error {
+	return filepath.WalkDir(filepath.Join(string(dir), root), func(name string, d fs.DirEntry, err error) error {
+		name = strings.TrimPrefix(strings.TrimPrefix(name, string(dir)), string(os.PathSeparator))
+		return fn(name, d, err)
 	})
-	if err != nil {
-		return nil, err
-	}
-	return names, nil
 }
 
 type Notebrew struct {
@@ -64,12 +56,39 @@ func New(fsys FS) *Notebrew {
 	return &Notebrew{fsys: fsys}
 }
 
-func (nb *Notebrew) Init() error {
+func (nb *Notebrew) Cleanup() error {
 	return nil
 }
 
-func (nb *Notebrew) Listener() (net.Listener, error) {
-	return nil, nil
+func (nb *Notebrew) Addr() (addr string, err error) {
+	const name = "local_url.txt"
+	file, err := nb.fsys.Open(name)
+	if err == nil {
+		b, err := io.ReadAll(file)
+		file.Close()
+		if err == nil {
+			addr = string(bytes.TrimSpace(b))
+			ln, err := net.Listen("tcp", addr)
+			if err == nil {
+				return addr, ln.Close()
+			}
+			nb.fsys.RemoveAll(name)
+		}
+	}
+	ln, err := net.Listen("tcp", "127.0.0.1:80")
+	if err != nil {
+		ln, err = net.Listen("tcp", "127.0.0.1:0")
+		if err != nil {
+			return "", err
+		}
+	}
+	defer ln.Close()
+	addr = ln.Addr().String()
+	err = nb.fsys.WriteFile(name, []byte(addr), 0644)
+	if err != nil {
+		return "", err
+	}
+	return addr, ln.Close()
 }
 
 func (nb *Notebrew) Router() http.Handler {
