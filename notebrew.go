@@ -107,7 +107,7 @@ func (nb *Notebrew) Addr() (addr string, err error) {
 	if runtime.GOOS == "windows" {
 		newline = "\r\n"
 	}
-	data := "[InternetShortcut]" + newline + "URL=http://" + addr
+	data := "[InternetShortcut]" + newline + "URL=http://" + addr + newline
 	err = nb.fsys.WriteFile(name, []byte(data), 0644)
 	if err != nil {
 		return "", err
