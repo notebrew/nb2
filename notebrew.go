@@ -12,6 +12,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"text/template"
 )
@@ -67,47 +68,28 @@ func (nb *Notebrew) Cleanup() error {
 }
 
 func (nb *Notebrew) Addr() (addr string, err error) {
-	const name = "local_url.txt"
-	file, err := nb.fsys.Open(name)
-	if err == nil {
-		b, err := io.ReadAll(file)
-		file.Close()
-		if err == nil {
-			addr = string(bytes.TrimSpace(b))
-			ln, err := net.Listen("tcp", addr)
-			if err == nil {
-				return addr, ln.Close()
-			}
-			nb.fsys.RemoveAll(name)
-		}
-	}
-	ln, err := net.Listen("tcp", "127.0.0.1:80")
-	if err != nil {
-		ln, err = net.Listen("tcp", "127.0.0.1:0")
-		if err != nil {
-			return "", err
-		}
-	}
-	defer ln.Close()
-	addr = ln.Addr().String()
-	err = nb.fsys.WriteFile(name, []byte(addr), 0644)
-	if err != nil {
-		return "", err
-	}
-	return addr, ln.Close()
-}
-
-func (nb *Notebrew) Addr2() (addr string, err error) {
 	const name = "notebrew.url"
 	file, err := nb.fsys.Open(name)
 	if err == nil {
 		b, err := io.ReadAll(file)
 		file.Close()
 		if err == nil {
-			addr = string(bytes.TrimSpace(b))
-			ln, err := net.Listen("tcp", addr)
-			if err == nil {
-				return addr, ln.Close()
+			data := string(b)
+			_, data, found := strings.Cut(data, "\nURL")
+			if found {
+				data = strings.TrimSpace(data)
+				data = strings.TrimPrefix(data, "=")
+				data = strings.TrimSpace(data)
+				addr, _, _ = strings.Cut(data, "\n")
+				if strings.HasPrefix(addr, "http://") {
+					addr = strings.TrimPrefix(addr, "http://")
+				} else if strings.HasPrefix(addr, "https://") {
+					addr = strings.TrimPrefix(addr, "https://")
+				}
+				ln, err := net.Listen("tcp", addr)
+				if err == nil {
+					return addr, ln.Close()
+				}
 			}
 			nb.fsys.RemoveAll(name)
 		}
@@ -121,10 +103,12 @@ func (nb *Notebrew) Addr2() (addr string, err error) {
 	}
 	defer ln.Close()
 	addr = ln.Addr().String()
-	var buf *bytes.Buffer
-	buf.WriteString("[InternetShortcut]")
-	buf.WriteString("")
-	err = nb.fsys.WriteFile(name, []byte(addr), 0644)
+	newline := "\n"
+	if runtime.GOOS == "windows" {
+		newline = "\r\n"
+	}
+	data := "[InternetShortcut]" + newline + "URL=http://" + addr
+	err = nb.fsys.WriteFile(name, []byte(data), 0644)
 	if err != nil {
 		return "", err
 	}

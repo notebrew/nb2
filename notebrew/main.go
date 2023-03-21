@@ -22,7 +22,7 @@ func main() {
 		if err != nil {
 			exit(err)
 		}
-		dataDir = filepath.Join(userHomeDir, "notebrew_data")
+		dataDir = filepath.Join(userHomeDir, "notebrewdata")
 	}
 	err := os.MkdirAll(dataDir, 0755)
 	if err != nil {
