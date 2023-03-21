@@ -48,7 +48,8 @@ func (dir dirFS) RemoveAll(name string) error {
 
 func (dir dirFS) WalkDir(root string, fn fs.WalkDirFunc) error {
 	return filepath.WalkDir(filepath.Join(string(dir), root), func(name string, d fs.DirEntry, err error) error {
-		name = strings.TrimPrefix(strings.TrimPrefix(name, string(dir)), string(os.PathSeparator))
+		name = strings.TrimPrefix(name, string(dir))
+		name = strings.TrimPrefix(name, string(os.PathSeparator))
 		return fn(name, d, err)
 	})
 }
@@ -89,6 +90,40 @@ func (nb *Notebrew) Addr() (addr string, err error) {
 	}
 	defer ln.Close()
 	addr = ln.Addr().String()
+	err = nb.fsys.WriteFile(name, []byte(addr), 0644)
+	if err != nil {
+		return "", err
+	}
+	return addr, ln.Close()
+}
+
+func (nb *Notebrew) Addr2() (addr string, err error) {
+	const name = "notebrew.url"
+	file, err := nb.fsys.Open(name)
+	if err == nil {
+		b, err := io.ReadAll(file)
+		file.Close()
+		if err == nil {
+			addr = string(bytes.TrimSpace(b))
+			ln, err := net.Listen("tcp", addr)
+			if err == nil {
+				return addr, ln.Close()
+			}
+			nb.fsys.RemoveAll(name)
+		}
+	}
+	ln, err := net.Listen("tcp", "127.0.0.1:80")
+	if err != nil {
+		ln, err = net.Listen("tcp", "127.0.0.1:0")
+		if err != nil {
+			return "", err
+		}
+	}
+	defer ln.Close()
+	addr = ln.Addr().String()
+	var buf *bytes.Buffer
+	buf.WriteString("[InternetShortcut]")
+	buf.WriteString("")
 	err = nb.fsys.WriteFile(name, []byte(addr), 0644)
 	if err != nil {
 		return "", err
