@@ -14,6 +14,8 @@ import (
 	"github.com/notebrew/nb2"
 )
 
+// if logged in (dashboard | edit post)
+
 func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 	dataDir := os.Getenv("NOTEBREW_DATA")

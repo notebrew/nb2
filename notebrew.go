@@ -19,10 +19,12 @@ import (
 
 type FS interface {
 	Open(name string) (fs.File, error)
-	WriteFile(name string, data []byte, perm fs.FileMode) error
-	RemoveAll(name string) error
+	OpenWriter(name string) (io.WriteCloser, error)
+	RemoveAll(path string) error
 	WalkDir(root string, fn fs.WalkDirFunc) error
 }
+
+// RemoveAll
 
 type dirFS string
 
@@ -34,17 +36,17 @@ func (dir dirFS) Open(name string) (fs.File, error) {
 	return os.Open(filepath.Join(string(dir), name))
 }
 
-func (dir dirFS) WriteFile(name string, data []byte, perm fs.FileMode) error {
+func (dir dirFS) OpenWriter(name string) (io.WriteCloser, error) {
 	path := filepath.Join(string(dir), name)
 	err := os.MkdirAll(filepath.Dir(path), 0755)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return os.WriteFile(path, data, perm)
+	return os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 }
 
-func (dir dirFS) RemoveAll(name string) error {
-	return os.RemoveAll(filepath.Join(string(dir), name))
+func (dir dirFS) RemoveAll(path string) error {
+	return os.RemoveAll(filepath.Join(string(dir), path))
 }
 
 func (dir dirFS) WalkDir(root string, fn fs.WalkDirFunc) error {
@@ -108,7 +110,16 @@ func (nb *Notebrew) Addr() (addr string, err error) {
 		newline = "\r\n"
 	}
 	data := "[InternetShortcut]" + newline + "URL=http://" + addr + newline
-	err = nb.fsys.WriteFile(name, []byte(data), 0644)
+	writer, err := nb.fsys.OpenWriter(name)
+	if err != nil {
+		return "", err
+	}
+	defer writer.Close()
+	_, err = writer.Write([]byte(data))
+	if err != nil {
+		return "", err
+	}
+	err = writer.Close()
 	if err != nil {
 		return "", err
 	}
