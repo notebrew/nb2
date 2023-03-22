@@ -137,6 +137,11 @@ func (nb *Notebrew) Router() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/admin/lib/", nb.ServeFile)
 	mux.HandleFunc("/admin/script/", nb.ServeFile)
+	mux.HandleFunc("/api/create/", http.NotFound) // TODO
+	mux.HandleFunc("/api/update/", http.NotFound) // TODO
+	mux.HandleFunc("/api/delete/", http.NotFound) // TODO
+	mux.HandleFunc("/api/rename/", http.NotFound) // TODO
+	// static | image | template | post | page | note
 	// static
 	mux.HandleFunc("/static/", nb.Static)
 	mux.HandleFunc("/admin/static/", nb.StaticAdmin)
