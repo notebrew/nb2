@@ -363,7 +363,6 @@ func (nb *Notebrew) PostAdmin(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println(err)
 	}
-	return
 }
 
 func (nb *Notebrew) PostCreate(w http.ResponseWriter, r *http.Request) {
@@ -393,6 +392,21 @@ func (nb *Notebrew) Page(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
 		return
+	}
+	tmpl, err := template.ParseFS(rootFS, "embed/editor.html")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	var buf bytes.Buffer
+	err = tmpl.Execute(&buf, nil)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	_, err = buf.WriteTo(w)
+	if err != nil {
+		log.Println(err)
 	}
 }
 
