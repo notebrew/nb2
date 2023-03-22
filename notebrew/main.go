@@ -16,7 +16,8 @@ import (
 
 // if logged in (dashboard | edit post)
 
-// TODO: notebrew create-user [-username bokwoon] [-password-hash bruh]
+// TODO: notebrew genpasswordhash [-password Hunter2]
+// TODO: notebrew createuser [-username bokwoon] [-password-hash bruh]
 
 func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
