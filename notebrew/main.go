@@ -16,6 +16,8 @@ import (
 
 // if logged in (dashboard | edit post)
 
+// TODO: notebrew create-user [-username bokwoon] [-password-hash bruh]
+
 func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 	dataDir := os.Getenv("NOTEBREW_DATA")
