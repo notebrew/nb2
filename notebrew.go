@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
+	"fmt"
 	"io"
 	"io/fs"
 	"log"
@@ -99,6 +100,15 @@ func (nb *Notebrew) isDomain(s string) bool {
 	return ok
 }
 
+func (nb *Notebrew) isResource(s string) bool {
+	switch s {
+	case "static", "image", "template", "post", "page", "note":
+		return true
+	default:
+		return false
+	}
+}
+
 func (nb *Notebrew) Cleanup() error {
 	return nil
 }
@@ -167,14 +177,34 @@ func (nb *Notebrew) Addr() (addr string, err error) {
 // post
 // note
 
+func (nb *Notebrew) Create(w http.ResponseWriter, r *http.Request) {
+	path := strings.TrimPrefix(r.URL.Path, "/api/create/")
+	var domain string
+	head, tail, found := strings.Cut(path, "/")
+	if found && nb.isDomain(head) {
+		domain, path = head, tail
+	}
+	resource, id, found := strings.Cut(path, "/")
+	if !found {
+		http.Error(w, "id not found", http.StatusBadRequest)
+		return
+	}
+	if !nb.isResource(resource) {
+		http.Error(w, fmt.Sprintf("invalid resource type %q", resource), http.StatusUnprocessableEntity)
+		return
+	}
+	// /api/<action>/<domain>/<resource>/<id>
+	_, _, _ = domain, resource, id
+}
+
 func (nb *Notebrew) Router() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/admin/lib/", nb.ServeFile)
 	mux.HandleFunc("/admin/script/", nb.ServeFile)
-	mux.HandleFunc("/api/create/", http.NotFound) // TODO
-	mux.HandleFunc("/api/update/", http.NotFound) // TODO
-	mux.HandleFunc("/api/delete/", http.NotFound) // TODO
-	mux.HandleFunc("/api/rename/", http.NotFound) // TODO
+	mux.HandleFunc("/api/create/", nb.Create)
+	mux.HandleFunc("/api/update/", http.NotFound)
+	mux.HandleFunc("/api/delete/", http.NotFound)
+	mux.HandleFunc("/api/rename/", http.NotFound)
 	// static | image | template | post | page | note
 	// static
 	mux.HandleFunc("/static/", nb.Static)
@@ -220,8 +250,8 @@ func (nb *Notebrew) Router() http.Handler {
 var rootFS = os.DirFS(".")
 
 func (nb *Notebrew) ServeFile(w http.ResponseWriter, r *http.Request) {
-	name := strings.TrimPrefix(r.URL.Path, "/admin/")
-	file, err := rootFS.Open(strings.TrimSuffix(name, "/"))
+	name := strings.TrimSuffix(strings.TrimPrefix(r.URL.Path, "/admin/"), "/")
+	file, err := rootFS.Open(name)
 	if err != nil {
 		if errors.Is(err, fs.ErrNotExist) {
 			http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
