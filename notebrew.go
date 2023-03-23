@@ -1,6 +1,7 @@
 package nb2
 
 import (
+	"bufio"
 	"bytes"
 	"errors"
 	"io"
@@ -59,10 +60,43 @@ func (dir dirFS) WalkDir(root string, fn fs.WalkDirFunc) error {
 
 type Notebrew struct {
 	fsys FS
+	tlds map[string]struct{}
 }
 
-func New(fsys FS) *Notebrew {
-	return &Notebrew{fsys: fsys}
+func New(fsys FS) (*Notebrew, error) {
+	nb := &Notebrew{
+		fsys: fsys,
+		tlds: make(map[string]struct{}),
+	}
+	file, err := rootFS.Open("embed/tlds-alpha-by-domain.txt")
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+	reader := bufio.NewReader(file)
+	for {
+		line, err := reader.ReadString('\n')
+		line = strings.ToLower(strings.TrimSpace(line))
+		if line != "" && !strings.HasPrefix(line, "#") {
+			nb.tlds[line] = struct{}{}
+		}
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+	}
+	return nb, nil
+}
+
+func (nb *Notebrew) isDomain(s string) bool {
+	i := strings.LastIndex(s, ".")
+	if i < 0 {
+		return false
+	}
+	_, ok := nb.tlds[s[i+1:]]
+	return ok
 }
 
 func (nb *Notebrew) Cleanup() error {

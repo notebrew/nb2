@@ -34,7 +34,10 @@ func main() {
 	if err != nil {
 		exit(err)
 	}
-	nb := nb2.New(nb2.DirFS(dataDir))
+	nb, err := nb2.New(nb2.DirFS(dataDir))
+	if err != nil {
+		exit(err)
+	}
 	addr, err := nb.Addr()
 	if err != nil {
 		exit(err)
