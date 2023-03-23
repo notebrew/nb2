@@ -178,23 +178,27 @@ func (nb *Notebrew) Addr() (addr string, err error) {
 // note
 
 func (nb *Notebrew) Create(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		return
+	}
 	path := strings.TrimPrefix(r.URL.Path, "/api/create/")
 	var domain string
 	head, tail, found := strings.Cut(path, "/")
 	if found && nb.isDomain(head) {
 		domain, path = head, tail
 	}
-	resource, id, found := strings.Cut(path, "/")
+	head, tail, found = strings.Cut(path, "/")
 	if !found {
 		http.Error(w, "id not found", http.StatusBadRequest)
 		return
 	}
-	if !nb.isResource(resource) {
-		http.Error(w, fmt.Sprintf("invalid resource type %q", resource), http.StatusUnprocessableEntity)
+	if !nb.isResource(head) {
+		http.Error(w, fmt.Sprintf("invalid resource type %q", head), http.StatusUnprocessableEntity)
 		return
 	}
 	// /api/<action>/<domain>/<resource>/<id>
-	_, _, _ = domain, resource, id
+	_ = domain
 }
 
 func (nb *Notebrew) Router() http.Handler {
@@ -205,6 +209,17 @@ func (nb *Notebrew) Router() http.Handler {
 	mux.HandleFunc("/api/update/", http.NotFound)
 	mux.HandleFunc("/api/delete/", http.NotFound)
 	mux.HandleFunc("/api/rename/", http.NotFound)
+	mux.HandleFunc("/redirect", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+			return
+		}
+		http.SetCookie(w, &http.Cookie{
+			Name:  "s",
+			Value: "1",
+		})
+		http.Redirect(w, r, "https://google.com/", http.StatusFound)
+	})
 	// static | image | template | post | page | note
 	// static
 	mux.HandleFunc("/static/", nb.Static)
