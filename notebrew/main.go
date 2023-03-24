@@ -34,7 +34,9 @@ func main() {
 	if err != nil {
 		exit(err)
 	}
-	nb, err := nb2.New("", nil, nb2.DirFS(dataDir))
+	nb, err := nb2.New(nb2.Config{
+		FS: nb2.DirFS(dataDir),
+	})
 	if err != nil {
 		exit(err)
 	}

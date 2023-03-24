@@ -60,22 +60,47 @@ func (dir dirFS) WalkDir(root string, fn fs.WalkDirFunc) error {
 	})
 }
 
+type Mode int
+
+const (
+	ModeLocalhost = iota
+	ModeSinglesite
+	ModeMultisite
+)
+
+var modeNames = []string{
+	ModeLocalhost:  "localhost",
+	ModeSinglesite: "singlesite",
+	ModeMultisite:  "multisite",
+}
+
+func (m Mode) Enumerate() []string {
+	return modeNames
+}
+
+type Config struct {
+	Dialect string
+	DB      *sql.DB
+	FS      FileSystem
+	Mode    Mode
+}
+
 type Notebrew struct {
 	dialect string
 	db      *sql.DB
-	fsys    FileSystem
+	fs      FileSystem
+	mode    Mode
 }
 
-func New(dialect string, db *sql.DB, fsys FileSystem) (*Notebrew, error) {
+func New(c Config) (*Notebrew, error) {
 	nb := &Notebrew{
-		dialect: dialect,
-		db:      db,
-		fsys:    fsys,
+		dialect: c.Dialect,
+		db:      c.DB,
+		fs:      c.FS,
+		mode:    c.Mode,
 	}
 	return nb, nil
 }
-
-// func New(dialect string, db *sql.DB, fsys FS, handlers map[string]http.Handler)
 
 func (nb *Notebrew) isResource(s string) bool {
 	switch s {
@@ -87,12 +112,19 @@ func (nb *Notebrew) isResource(s string) bool {
 }
 
 func (nb *Notebrew) Cleanup() error {
-	return nil
+	if nb.db == nil {
+		return nil
+	}
+	switch nb.dialect {
+	case "sqlite":
+		nb.db.Exec(`PRAGMA analysis_limit(400); PRAGMA optimize;`)
+	}
+	return nb.db.Close()
 }
 
 func (nb *Notebrew) Addr() (addr string, err error) {
 	const name = "notebrew.url"
-	file, err := nb.fsys.Open(name)
+	file, err := nb.fs.Open(name)
 	if err == nil {
 		b, err := io.ReadAll(file)
 		file.Close()
@@ -114,7 +146,7 @@ func (nb *Notebrew) Addr() (addr string, err error) {
 					return addr, ln.Close()
 				}
 			}
-			nb.fsys.RemoveAll(name)
+			nb.fs.RemoveAll(name)
 		}
 	}
 	ln, err := net.Listen("tcp", "127.0.0.1:80")
@@ -131,7 +163,7 @@ func (nb *Notebrew) Addr() (addr string, err error) {
 		newline = "\r\n"
 	}
 	data := "[InternetShortcut]" + newline + "URL=http://" + addr + newline
-	writer, err := nb.fsys.OpenWriter(name)
+	writer, err := nb.fs.OpenWriter(name)
 	if err != nil {
 		return "", err
 	}
