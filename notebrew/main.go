@@ -42,17 +42,17 @@ func main() {
 	if err != nil {
 		exit(err)
 	}
-	waitForInterrupt := make(chan os.Signal, 1)
-	signal.Notify(waitForInterrupt, syscall.SIGINT, syscall.SIGTERM)
+	wait := make(chan os.Signal, 1)
+	signal.Notify(wait, syscall.SIGINT, syscall.SIGTERM)
 	server := http.Server{
 		Addr:    addr,
 		Handler: nb.Router(),
 	}
 	fmt.Println("Listening on " + server.Addr)
 	go server.ListenAndServe()
-	<-waitForInterrupt
+	<-wait
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
-	_ = server.Shutdown(ctx)
-	_ = nb.Cleanup()
+	server.Shutdown(ctx)
+	nb.Cleanup()
 }
