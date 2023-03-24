@@ -1,0 +1,14 @@
+sql.Open()
+PRAGMA busy_timeout = 10000;
+PRAGMA journal_mode = WAL;
+PRAGMA journal_size_limit = 200000000;
+PRAGMA synchronous = NORMAL;
+PRAGMA foreign_keys = TRUE;
+_txlock=immediate
+
+db.Close()
+PRAGMA analysis_limit=400;
+PRAGMA optimize;
+
+https://github.com/pocketbase/pocketbase/blob/master/core/db_cgo.go
+https://github.com/pocketbase/pocketbase/blob/master/core/db_nocgo.go

@@ -34,7 +34,7 @@ func main() {
 	if err != nil {
 		exit(err)
 	}
-	nb, err := nb2.New(nb2.DirFS(dataDir))
+	nb, err := nb2.New("", nil, nb2.DirFS(dataDir))
 	if err != nil {
 		exit(err)
 	}
@@ -46,7 +46,7 @@ func main() {
 	signal.Notify(wait, syscall.SIGINT, syscall.SIGTERM)
 	server := http.Server{
 		Addr:    addr,
-		Handler: nb.Router(),
+		Handler: nb.Handler(),
 	}
 	fmt.Println("Listening on " + server.Addr)
 	go server.ListenAndServe()

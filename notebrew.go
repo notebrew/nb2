@@ -1,6 +1,8 @@
 package nb2
 
 import (
+	"bytes"
+	"database/sql"
 	"errors"
 	"fmt"
 	"io"
@@ -13,11 +15,12 @@ import (
 	"path"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 	"text/template"
 )
 
-type FS interface {
+type FileSystem interface {
 	Open(name string) (fs.File, error)
 	OpenWriter(name string) (io.WriteCloser, error)
 	RemoveAll(path string) error
@@ -28,7 +31,7 @@ type FS interface {
 
 type dirFS string
 
-func DirFS(dir string) FS {
+func DirFS(dir string) FileSystem {
 	return dirFS(dir)
 }
 
@@ -58,15 +61,21 @@ func (dir dirFS) WalkDir(root string, fn fs.WalkDirFunc) error {
 }
 
 type Notebrew struct {
-	fsys FS
+	dialect string
+	db      *sql.DB
+	fsys    FileSystem
 }
 
-func New(fsys FS) (*Notebrew, error) {
+func New(dialect string, db *sql.DB, fsys FileSystem) (*Notebrew, error) {
 	nb := &Notebrew{
-		fsys: fsys,
+		dialect: dialect,
+		db:      db,
+		fsys:    fsys,
 	}
 	return nb, nil
 }
+
+// func New(dialect string, db *sql.DB, fsys FS, handlers map[string]http.Handler)
 
 func (nb *Notebrew) isResource(s string) bool {
 	switch s {
@@ -138,6 +147,16 @@ func (nb *Notebrew) Addr() (addr string, err error) {
 	return addr, ln.Close()
 }
 
+func callermsg(a ...any) string {
+	_, file, line, _ := runtime.Caller(1)
+	var b strings.Builder
+	b.WriteString(file + ":" + strconv.Itoa(line))
+	for _, v := range a {
+		b.WriteString("\n" + fmt.Sprint(v))
+	}
+	return b.String()
+}
+
 // admin
 // api
 // static
@@ -173,7 +192,7 @@ func (nb *Notebrew) Create(w http.ResponseWriter, r *http.Request) {
 	_ = domain
 }
 
-func (nb *Notebrew) Router() http.Handler {
+func (nb *Notebrew) Handler() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/admin/lib/", nb.ServeFile)
 	mux.HandleFunc("/admin/script/", nb.ServeFile)
@@ -217,12 +236,12 @@ func (nb *Notebrew) ServeFile(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 			return
 		}
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, callermsg(err), http.StatusInternalServerError)
 		return
 	}
 	fileinfo, err := file.Stat()
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, callermsg(err), http.StatusInternalServerError)
 		return
 	}
 	if fileinfo.IsDir() {
@@ -246,7 +265,7 @@ func (nb *Notebrew) ServeFile(w http.ResponseWriter, r *http.Request) {
 	buf.Grow(int(fileinfo.Size()))
 	_, err = buf.ReadFrom(file)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, callermsg(err), http.StatusInternalServerError)
 		return
 	}
 	http.ServeContent(w, r, name, fileinfo.ModTime(), bytes.NewReader(buf.Bytes()))
