@@ -2,6 +2,11 @@
 
 package main
 
+import (
+	"fmt"
+	"os"
+)
+
 func exit(v ...any) {
 	if len(v) == 0 {
 		os.Exit(0)
