@@ -20,6 +20,8 @@ import (
 // TODO: notebrew createuser [-username bokwoon] [-password Hunter2] [-password-hash bruh]
 // TODO: notebrew updateuser [-username bokwoon] [-password Hunter2] [-password-hash bruh]
 
+// flags: -dir -mode -port
+
 func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 	dataDir := os.Getenv("NOTEBREW_DATA")

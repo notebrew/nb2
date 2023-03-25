@@ -12,11 +12,13 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"os/signal"
 	"path"
 	"path/filepath"
 	"runtime"
 	"strconv"
 	"strings"
+	"syscall"
 	"text/template"
 )
 
@@ -79,10 +81,11 @@ func (m Mode) Enumerate() []string {
 }
 
 type Config struct {
-	Dialect string
-	DB      *sql.DB
-	FS      FileSystem
-	Mode    Mode
+	Dialect   string
+	DB        *sql.DB
+	FS        FileSystem
+	Mode      Mode
+	NewServer func(addr string, h http.Handler) *http.Server
 }
 
 type Notebrew struct {
@@ -90,6 +93,7 @@ type Notebrew struct {
 	db      *sql.DB
 	fs      FileSystem
 	mode    Mode
+	stop    chan os.Signal
 }
 
 func New(c Config) (*Notebrew, error) {
@@ -98,7 +102,9 @@ func New(c Config) (*Notebrew, error) {
 		db:      c.DB,
 		fs:      c.FS,
 		mode:    c.Mode,
+		stop:    make(chan os.Signal, 1),
 	}
+	signal.Notify(nb.stop, syscall.SIGINT, syscall.SIGTERM)
 	return nb, nil
 }
 
@@ -179,6 +185,9 @@ func (nb *Notebrew) Addr() (addr string, err error) {
 	return addr, ln.Close()
 }
 
+func (nb *Notebrew) Serve() {
+}
+
 func callermsg(a ...any) string {
 	_, file, line, _ := runtime.Caller(1)
 	var b strings.Builder
@@ -188,13 +197,6 @@ func callermsg(a ...any) string {
 	}
 	return b.String()
 }
-
-// admin
-// api
-// static
-// image
-// post
-// note
 
 func (nb *Notebrew) Create(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
