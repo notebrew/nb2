@@ -47,8 +47,11 @@ func main() {
 	wait := make(chan os.Signal, 1)
 	signal.Notify(wait, syscall.SIGINT, syscall.SIGTERM)
 	server := http.Server{
-		Addr:    addr,
-		Handler: nb.Handler(),
+		Addr:         addr,
+		Handler:      nb.Handler(),
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 10 * time.Second,
+		IdleTimeout:  120 * time.Second,
 	}
 	fmt.Println("Listening on " + server.Addr)
 	go server.ListenAndServe()
