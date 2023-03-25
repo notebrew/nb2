@@ -19,6 +19,8 @@ TODO: figure out database scaffolding
 
 net/http: doc: Clarify that Server.ServeTLS enables http2, but Server.Serve does not
 https://github.com/golang/go/issues/46602
+https://stackoverflow.com/questions/39320371/how-start-web-server-to-open-page-in-browser-in-golang
+https://stackoverflow.com/questions/32738188/how-can-i-start-the-browser-after-the-server-started-listening
 
 localhost -> localhost:3030
 singlesite -> :443
