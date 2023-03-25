@@ -53,7 +53,7 @@ func main() {
 		WriteTimeout: 10 * time.Second,
 		IdleTimeout:  120 * time.Second,
 	}
-	fmt.Println("Listening on " + server.Addr)
+	fmt.Println("Listening on http://" + server.Addr)
 	go server.ListenAndServe()
 	<-wait
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
