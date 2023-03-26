@@ -168,6 +168,8 @@ func (nb *Notebrew) Addr() (addr string, err error) {
 	if runtime.GOOS == "windows" {
 		newline = "\r\n"
 	}
+	// TODO: If we're doing "open url if port 3030 already running" then we
+	// don't need a notebrew.url file anymore.
 	data := "[InternetShortcut]" + newline + "URL=http://" + addr + newline
 	writer, err := nb.fs.OpenWriter(name)
 	if err != nil {
