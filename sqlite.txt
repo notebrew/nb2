@@ -13,15 +13,16 @@ PRAGMA optimize;
 https://github.com/pocketbase/pocketbase/blob/master/core/db_cgo.go
 https://github.com/pocketbase/pocketbase/blob/master/core/db_nocgo.go
 
-TODO: instead of using 127.0.0.1, use localhost:3030 but also open the URL if compiled with a build flag.
+TODO: instead of using 127.0.0.1, use localhost:6444 but also open the URL if compiled with a build flag.
     https://en.wikipedia.org/wiki/List_of_TCP_and_UDP_port_numbers#Registered_ports
 TODO: figure out database scaffolding
+TODO: Notebrew itself doesn't know a thing about SSL, all it knows is mode=localhost means the host is localhost:6444, mode=singlesite or mode=multisite means the host is obtained from
 
 net/http: doc: Clarify that Server.ServeTLS enables http2, but Server.Serve does not
 https://github.com/golang/go/issues/46602
 https://stackoverflow.com/questions/39320371/how-start-web-server-to-open-page-in-browser-in-golang
 https://stackoverflow.com/questions/32738188/how-can-i-start-the-browser-after-the-server-started-listening
 
-localhost -> localhost:3030
+localhost -> localhost:6444
 singlesite -> :443
 multisite -> :443
